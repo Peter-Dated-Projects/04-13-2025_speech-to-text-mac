@@ -1,0 +1,6 @@
+**.bin
+**.mlmodelc
+.venv
+
+
+**/data
