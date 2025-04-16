@@ -4,6 +4,8 @@ import io from "socket.io-client";
 import Image from 'next/image';
 import styles from "../page.module.css";
 
+// ------------------------------------------------------------ //
+
 // io instance
 const socket = io("http://localhost:3000/streaming", {
   transports: ['websocket'],
@@ -13,6 +15,15 @@ const socket = io("http://localhost:3000/streaming", {
   reconnectionDelay: 1000,
 });
 
+
+const STT_MODELS: ModelSelection[] = [
+  { model: 'base.en', model_id: 'base.en' },
+  { model: 'small.en', model_id: 'small.en' },
+  { model: 'medium.en', model_id: 'medium.en' },
+];
+
+
+// ------------------------------------------------------------ //
 
 const audioConstraints = {
   audio: {
@@ -29,6 +40,14 @@ interface Segment {
   text: string;
 };
 
+
+interface ModelSelection {
+  model: string;
+  model_id: string;
+};
+
+
+// ------------------------------------------------------------ //
 
 const AudioRecorder: React.FC = () => {
 
@@ -219,8 +238,11 @@ const AudioRecorder: React.FC = () => {
         />
         {/* a text selection dropdown */}
         <select ref={modelSelectRef} className={styles.select} style={{width: "100px"}}>
-          <option value="base.en">base.en</option>
-          <option value="small">small</option>
+          {STT_MODELS.map((model) => (
+            <option key={model.model_id} value={model.model_id}>
+              {model.model}
+            </option>
+          ))}
         </select>
       </div>
 
