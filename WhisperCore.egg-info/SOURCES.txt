@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+WhisperCore.egg-info/PKG-INFO
+WhisperCore.egg-info/SOURCES.txt
+WhisperCore.egg-info/dependency_links.txt
+WhisperCore.egg-info/entry_points.txt
+WhisperCore.egg-info/not-zip-safe
+WhisperCore.egg-info/requires.txt
+WhisperCore.egg-info/top_level.txt

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "WhisperCore"
+version = "b_0.1"
+description = "Speech-to-Text Transcription for macOS using Whispercpp"
+readme = "README.md"
+authors = [
+    {name = "Peter Zhang", email = ""}
+]
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dynamic = ["dependencies"]
+
+[project.scripts]
+verify = "verify:main"
+
+[tool.setuptools]
+packages = ["verify"]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.package-data]
+"my_module" = ["../external_data/*"]
+
+[project.urls]
+"Homepage" = "https://github.com/petthepotat/WhisperCore"
+"Bug Tracker" = "https://github.com/petthepotat/WhisperCore/issues"
+
+# Development tool configurations
+[tool.black]
+line-length = 88
+target-version = ["py39", "py310", "py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
