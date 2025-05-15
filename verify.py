@@ -207,9 +207,9 @@ class AsyncMicrophone(threading.Thread):
             # ------------------------------------------------------------ #
             # query user
 
-            # _input = int(input("Press Enter to start recording..."))
-            _input = 0
-            print(f"Selected device: {_mic_choices[_input]}")
+            _input = int(input("Press Enter to start recording..."))
+            # _input = 0
+            print(f"Selected device: {_mic_choices[_input-1]}")
 
             # open mic stream
             self._stream = self._audio.open(
@@ -538,6 +538,12 @@ class WhisperCoreSave:
             pickle.dump(result, f)
 
 
+class WhisperSegmentChunk:
+    def __init__(self, timestamp: float, segment: WhisperSegment):
+        self.timestamp = timestamp
+        self.segment = segment
+
+
 # whisper core
 class WhisperCore:
     """
@@ -587,16 +593,19 @@ class WhisperCore:
             # find the proper start of the audio
             if not len(self._results_container):
                 # add empty segment item
-                self._results_container.append(
+                _obj = WhisperSegmentChunk(
+                    time.time(),
                     WhisperSegment(
                         t0=0,
                         t1=0,
                         text="",
-                    )
+                    ),
                 )
+                self._results_container.append(_obj)
+
             elif len(self._results_container) > 1:
                 # yes results, start from end of last results
-                start_millis = int(self._results_container[-1].t0)
+                start_millis = int(self._results_container[-1].segment.t0)
 
         # STEP 2
         with self._audio_storage._audio_cache_lock:
@@ -623,12 +632,21 @@ class WhisperCore:
             seg.text = seg.text.strip()
 
         with self._results_container_lock:
-            self._results_container[-1] = results[0]
+            _old_text = self._results_container[-1].segment.text
+            _new_text = results[0].text
+            self._results_container[-1].segment = results[0]
+
+            # only change timestamp if text changes
+            if _old_text.strip() != _new_text.strip():
+                self._results_container[-1].timestamp = time.time()
+
             if len(results) > 1:
                 # add new results
                 for seg in results[1:]:
                     # add new segment to results container
-                    self._results_container.append(seg)
+                    self._results_container.append(
+                        WhisperSegmentChunk(time.time(), seg)
+                    )
 
     def transcribe_audio(self, audio_data: np.array, **kwargs):
         """
@@ -749,7 +767,7 @@ if __name__ == "__main__":
         A_CONFIG,
         WHISPER_CONFIG,
         chunk_size=CHUNK_SIZE,
-        filename="whispercpp-audio-test.wav",
+        # filename="whispercpp-audio-test.wav",
     )
 
     audio_storage = AudioStorage(WHISPER_CONFIG)
@@ -761,7 +779,6 @@ if __name__ == "__main__":
 
     # ------------------------------------------------------------ #
     # start mic thread
-
     mic.start()
     print("Waiting for microphone to start...")
     while not mic._is_running:
@@ -773,6 +790,8 @@ if __name__ == "__main__":
 
         running = True
         while running:
+            start_time = time.time()
+
             print("# --------------------------------------------- #")
             # retrieve audio data for this segment
             print("Recording Audio...")
@@ -813,9 +832,10 @@ if __name__ == "__main__":
 
             for i, seg in enumerate(whisper._results_container):
                 print(f"Segment {i}:")
-                print(f"    Text: {seg.text}")
-                print(f"    Start: {seg.t0:.4f} ms")
-                print(f"    End: {seg.t1:.4f} ms")
+                print(f"    Text: {seg.segment.text}")
+                print(f"    Start: {seg.segment.t0:.4f} ms")
+                print(f"    End: {seg.segment.t1:.4f} ms")
+                print(f"    Last Edited: {time.time() - seg.timestamp:.4f} seconds")
 
             print(f"Total segments processed: {len(whisper._results_container)}")
 
@@ -824,7 +844,11 @@ if __name__ == "__main__":
             # --------------------------------------------- #
             # process audio
 
-            time.sleep(UPDATE_INTERVAL)
+            computational_delta = time.time() - start_time
+            if computational_delta < UPDATE_INTERVAL:
+                # sleep for the remaining time
+                time.sleep(UPDATE_INTERVAL - computational_delta)
+
     except KeyboardInterrupt:
         print("Exiting...")
     except Exception as e:
