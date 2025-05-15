@@ -3,8 +3,8 @@ from flask_socketio import SocketIO, emit
 
 from flask import current_app as app
 from backend import (
-    socketio_instance,
-    _AUDIO_BUFFERS,
+    SocketIOInstance,
+    AudioBuffersInstance,
     CACHE_STREAMING_KEY,
     CACHE_AUDIO_DATA,
     CACHE_FILE_PATH,
@@ -31,13 +31,13 @@ streaming_bp = Blueprint("streaming_bp", __name__)
 def is_valid_streaming_key(key: str) -> bool:
     """Check if the streaming key is valid."""
     # Check if the key exists in the _AUDIO_BUFFERS
-    return key in _AUDIO_BUFFERS
+    return key in AudioBuffersInstance()
 
 
 def is_audio_buffer_empty(key: str) -> bool:
     """Check if the audio buffer is empty."""
     # Check if the key exists and if its buffer is empty
-    return is_valid_streaming_key(key) and len(_AUDIO_BUFFERS[key]) == 0
+    return is_valid_streaming_key(key) and len(AudioBuffersInstance()[key]) == 0
 
 
 def process_audio(key: str) -> bool:
@@ -46,13 +46,15 @@ def process_audio(key: str) -> bool:
     if not is_valid_streaming_key(key):
         return False
 
-    audio_chunks = _AUDIO_BUFFERS[key][CACHE_AUDIO_DATA]
+    audio_chunks = AudioBuffersInstance()[key][CACHE_AUDIO_DATA]
     # Combine the chunks into a single blob
     audio_blob = b"".join(audio_chunks)
     _raw_path = os.path.join(app.config["AUDIO_CACHE_DIR"], f"recording_{key}.webm")
 
-    print(f"This is the streaming key: {_AUDIO_BUFFERS[key][CACHE_STREAMING_KEY]}")
-    print(_AUDIO_BUFFERS[key][CACHE_FILE_PATH])
+    print(
+        f"This is the streaming key: {AudioBuffersInstance()[key][CACHE_STREAMING_KEY]}"
+    )
+    print(AudioBuffersInstance()[key][CACHE_FILE_PATH])
     print(f"Audio buffer length: {len(audio_blob)}")
 
     # save the audio file as a webm file
@@ -63,21 +65,21 @@ def process_audio(key: str) -> bool:
         print("Saved audio blob to raw temporary file")
 
         _temp_file = os.path.join(app.config["AUDIO_CACHE_DIR"], f"temp_{key}.wav")
-        _final_file = _AUDIO_BUFFERS[key][CACHE_FILE_PATH]
+        _final_file = AudioBuffersInstance()[key][CACHE_FILE_PATH]
         # ffmpeg to save file as proper format
         ffmpeg.input(_raw_path).output(
             _final_file, ar=16000, ac=1, acodec="pcm_s16le"
         ).run(quiet=False, overwrite_output=True)
-        print("Saved audio data to wav file: ", _AUDIO_BUFFERS[key][CACHE_FILE_PATH])
+        print("Saved audio data to wav file: ", _final_file)
 
     except Exception as e:
         print(f"Error processing audio: {e}")
         return False
 
-    print(f"Audio processed and saved to {_AUDIO_BUFFERS[key][CACHE_FILE_PATH]}")
+    print(f"Audio processed and saved to {_final_file}")
 
     # reset audio data
-    _AUDIO_BUFFERS[key].popitem()
+    AudioBuffersInstance()[key] = None
 
     return True
 
@@ -87,12 +89,12 @@ def process_audio(key: str) -> bool:
 # --------------------------------------------------------------------------- #
 
 
-@socketio_instance.on("connect", namespace="/streaming")
+@SocketIOInstance().on("connect", namespace="/streaming")
 def handle_connect():
     print("Client connected", request.sid)
     sid = request.sid
 
-    _AUDIO_BUFFERS[sid] = {
+    AudioBuffersInstance()[sid] = {
         CACHE_STREAMING_KEY: sid,
         CACHE_FILE_PATH: os.path.join(app.config["AUDIO_CACHE_DIR"], f"{sid}.wav"),
         CACHE_AUDIO_DATA: [],
@@ -106,7 +108,7 @@ def handle_connect():
     emit("response", {"message": "Connected to server"})
 
 
-@socketio_instance.on("stop_recording", namespace="/streaming")
+@SocketIOInstance().on("stop_recording", namespace="/streaming")
 def handle_stop_recording():
     sid = request.sid
 
@@ -116,8 +118,8 @@ def handle_stop_recording():
         return
 
     # return the audio file path
-    print("Emitting file path: ", _AUDIO_BUFFERS[sid][CACHE_FILE_PATH])
-    file_path = _AUDIO_BUFFERS[sid][CACHE_FILE_PATH]
+    print("Emitting file path: ", AudioBuffersInstance()[sid][CACHE_FILE_PATH])
+    file_path = AudioBuffersInstance()[sid][CACHE_FILE_PATH]
     # Construct a public URL for the audio file.
     base_url = app.config.get("AUDIO_BASE_URL", "http://localhost:3000/static/audio")
     file_url = f"{base_url}/{os.path.basename(file_path)}"
@@ -133,7 +135,7 @@ def handle_stop_recording():
     )
 
 
-@socketio_instance.on("disconnect", namespace="/streaming")
+@SocketIOInstance().on("disconnect", namespace="/streaming")
 def handle_disconnect():
     print("Client disconnected", request.sid)
     sid = request.sid
@@ -150,7 +152,7 @@ def handle_disconnect():
     print(f"Saved recording for client {sid}")
 
 
-@socketio_instance.on("audio_chunk", namespace="/streaming")
+@SocketIOInstance().on("audio_chunk", namespace="/streaming")
 def handle_audio_chunk(data):
     """Handle incoming audio chunk."""
     sid = request.sid
@@ -167,7 +169,7 @@ def handle_audio_chunk(data):
     print("Received chunk: length = ", len(_chunk))
 
     # Append the received audio data to the buffer
-    _AUDIO_BUFFERS[sid][CACHE_AUDIO_DATA].append(_chunk)
+    AudioBuffersInstance()[sid][CACHE_AUDIO_DATA].append(_chunk)
 
     # Optionally, send back a response
     emit("response", {"message": "received chunk"}, namespace="/streaming")

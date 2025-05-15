@@ -4,14 +4,6 @@
 FILEDIR=$(dirname "$0")
 # get script name
 FILENAME=$(basename "$0")
-
-
-echo "Running $FILENAME in $FILEDIR"
-
-# ------------------------------------------------------ #
-# setup env
-# ------------------------------------------------------ #
-
 # create .venv if not existent
 PYTHON_COMMAND="python3"
 # if python3 exists, use python3, if python exists then use python, otherwise exit
@@ -24,20 +16,31 @@ else
     exit 1
 fi
 
+# store location to .venv
+VENV_LOCATION=${FILEDIR}/../.venv
+# store location to requirements.txt
+REQUIREMENTS_LOCATION=${FILEDIR}/../requirements.txt
+
+echo "Running $FILENAME in $FILEDIR"
+
+# ------------------------------------------------------ #
+# setup env
+# ------------------------------------------------------ #
+
 # create .venv if not existent
-if [ ! -d ".venv" ]; then
+if [ ! -d VENV_LOCATION ]; then
     echo "Creating virtual environment"
-    $PYTHON_COMMAND -m venv .venv
+    $PYTHON_COMMAND -m venv "$VENV_LOCATION"
 fi
 
 # activate .venv
-source "$FILEDIR/../.venv/bin/activate"
+source "$VENV_LOCATION/bin/activate"
 
 # -------------------------------------------------------- #
 # install requirements
 # -------------------------------------------------------- #
 
-# pip install -r requirements.txt
+pip install -r $REQUIREMENTS_LOCATION
 
 # check for errors from prev command
 if [ $? -ne 0 ]; then
@@ -51,22 +54,10 @@ fi
 
 # check if .env exists
 if [ ! -f ".env" ]; then
-    echo "Creating .env file"
-    # write a lot of data into .env
-    cat << EOF > .env       # TODO - change this
-# .env file for backend
-
-PORT=5000
-
-DB_URL=sqlite:///./test.db
-DB_NAME=test.db
-DB_USER=admin
-DB_PASSWORD=admin
-DB_HOST=localhost
-DB_PORT=5432
-EOF
+    # error
+    echo "Error: .env file does not exist"
+    exit 1
 fi
-
 # check if .env file is readable
 if [ ! -r ".env" ]; then
     echo "Error: .env file is not readable"
@@ -76,9 +67,7 @@ fi
 # ---------------------------------------------------- #
 # create database
 
-mongod --dbpath "$FILEDIR/data/db" &
-
-# add other monogodb settings to run command
+mongod --config mongodb.conf --dbpath "$FILEDIR/data/db" --fork
 
 # ---------------------------------------------------- #
 # start server
