@@ -1,20 +1,43 @@
-import styles from "./page.module.css";
 
-import AudioRecorder from "./components/AudioRecorder";
+"use client";
+import styles from "./styles/page.module.css";
+
+import ConversationSidebar from "./components/ConversationSidebar";
+
+import { useState } from "react";
+import { ConversationFetchItem } from "./components/ConversationSidebar";
+
+import ConversationContainer from "./components/ConversationContent";
+
+// ---------------------------------------------------------------- //
+// Functions+ etc
+// ---------------------------------------------------------------- //
+
+
 
 // ---------------------------------------------------------------- //
 // This is the main page of the app
 // ---------------------------------------------------------------- //
 
 export default function Home() {
+  // states
+  const [currentConversation, setCurrentConversation] = useState<ConversationFetchItem | null>(null);
+
+  function handleConversationClick(conversation: ConversationFetchItem) {
+    console.log("Conversation clicked:", conversation);
+    setCurrentConversation(conversation);
+  }
+
   return (
-    <div className={styles.page}>
-      <h1>Microphone</h1>
-      <main style={{width: "80%"}}>
-        <div style={{border: "1px solid white", padding: "20px", borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.1)"}}>
-          <AudioRecorder />
+      <main className={styles.container}>
+
+        <div className={styles["content-grid"]}>
+          <ConversationSidebar onConversationClick={handleConversationClick} />
+          <div className={styles["content-container"]}>
+            <ConversationContainer currentContext={currentConversation} />
+          </div>
         </div>
+
       </main>
-    </div>
   );
 }

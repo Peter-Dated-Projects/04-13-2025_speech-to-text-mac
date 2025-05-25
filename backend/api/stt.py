@@ -129,26 +129,12 @@ def stt_initialize():
         return (
             jsonify(
                 {
-                    "error": "Model already initialized",
+                    "error": "Model already loaded",
                     "model": _model,
                     "loaded_models": app.config["LOADED_MODELS"],
                 }
             ),
-            200,
-        )
-
-    # find path to model
-    _model_path = app.config["MODEL_PATH_MAP"][_model]
-
-    # load the model
-    if not load_model(_model_path):
-        return (
-            jsonify(
-                {
-                    "error": "Model failed to load",
-                }
-            ),
-            500,
+            400,
         )
 
     return jsonify({"message": "STT service initialized", "model": _model}), 200
@@ -213,9 +199,38 @@ def stt_transcribe_stream():
 
     # Placeholder response
     _file_path = os.path.join(app.config["AUDIO_CACHE_DIR"], f"{_sid}.wav")
+
+    # check if request model is open
+    if not is_model_valid(_model):
+        return (
+            jsonify(
+                {
+                    "error": "Model not valid",
+                    "supported_models": app.config["SUPPORTED_MODELS"],
+                }
+            ),
+            400,
+        )
+
+    # check if model is loaded
+    if not is_model_loaded(_model):
+        # load model
+        if not load_model(_model):
+            return (
+                jsonify(
+                    {
+                        "error": "Model failed to load",
+                        "model": _model,
+                        "loaded_models": app.config["LOADED_MODELS"],
+                    }
+                ),
+                500,
+            )
+        print("Loaded Model")
+    print("Loaded models: ", app.config["LOADED_MODELS"])
     segments = compute_file_transcription(_model, _file_path)
 
-    print(segments)
+    print("Segments:", segments)
 
     return jsonify({"segments": segments})
 
@@ -234,7 +249,30 @@ def stt_debug_transcribe_file():
     # check if model is loaded
     # don't load if not already loaded
     if not is_model_loaded(_model):
-        return jsonify({"error": "Model not loaded", "model": _model}), 400
+        # load model
+        if not load_model(_model):
+            return (
+                jsonify(
+                    {
+                        "error": "Model failed to load",
+                        "model": _model,
+                        "loaded_models": app.config["LOADED_MODELS"],
+                    }
+                ),
+                500,
+            )
+    # check if model is valid
+    if not is_model_valid(_model):
+        return (
+            jsonify(
+                {
+                    "error": "Model not valid",
+                    "supported_models": app.config["SUPPORTED_MODELS"],
+                }
+            ),
+            400,
+        )
+    print("Loaded Models: ", app.config["LOADED_MODELS"])
 
     # perform transcription
     segments = app.config["LOADED_MODELS"][_model].transcribe(

@@ -62,287 +62,106 @@ whisper_backend_init: using BLAS backend
 whisper_init_state: kv self size  =    6.29 MB
 whisper_init_state: kv cross size =   18.87 MB
 whisper_init_state: kv pad  size  =    3.15 MB
-whisper_init_state: loading Core ML model from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/../assets/models/ggml-base.en-encoder.mlmodelc'
-whisper_init_state: first run on a device may take a while ...
-whisper_init_state: Core ML model loaded
-whisper_init_state: compute buffer (conv)   =    5.61 MB
-whisper_init_state: compute buffer (cross)  =    7.72 MB
+whisper_init_state: compute buffer (conv)   =   17.22 MB
+whisper_init_state: compute buffer (encode) =   85.86 MB
+whisper_init_state: compute buffer (cross)  =    4.65 MB
 whisper_init_state: compute buffer (decode) =   97.27 MB
-[2025-04-15 02:28:21,323] DEBUG in stt: Loading model: base.en
-Progress:   0%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:28:21] "POST /stt/transcribe_stream HTTP/1.1" 200 280 0.961535
-(34653) accepted ('127.0.0.1', 52801)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_4WpHDJ6tcOwBqvcJAAAD.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/4WpHDJ6tcOwBqvcJAAAD.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[matroska,webm @ 0x139006390] File ended prematurely at pos. 8300 (0x206c)
-[out#0/wav @ 0x1390098a0] video:0KiB audio:118KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.064484%
-size=     118KiB time=00:00:03.77 bitrate= 256.2kbits/s speed= 536x    
-(34653) accepted ('127.0.0.1', 52819)
-(34653) accepted ('127.0.0.1', 52821)
-127.0.0.1 - - [15/Apr/2025 02:38:56] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 4.377658
-127.0.0.1 - - [15/Apr/2025 02:38:56] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 347 0.000909
-127.0.0.1 - - [15/Apr/2025 02:38:56] "GET /static/audio/4WpHDJ6tcOwBqvcJAAAD.wav HTTP/1.1" 206 121455 0.001171
-Progress:   0%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:38:56] "POST /stt/transcribe_stream HTTP/1.1" 200 310 0.211427
-(34653) accepted ('127.0.0.1', 53202)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_uLKD7QcWQXZTpJksAAAF.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-[matroska,webm @ 0x124731c10] File ended prematurely at pos. 509 (0x1fd)
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/uLKD7QcWQXZTpJksAAAF.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[out#0/wav @ 0x1247356c0] video:0KiB audio:6KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 1.354167%
-size=       6KiB time=00:00:00.18 bitrate= 259.5kbits/s speed=50.5x    
-(34653) accepted ('127.0.0.1', 53208)
-(34653) accepted ('127.0.0.1', 53210)
-127.0.0.1 - - [15/Apr/2025 02:40:17] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 1.008173
-127.0.0.1 - - [15/Apr/2025 02:40:17] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 347 0.000680
-127.0.0.1 - - [15/Apr/2025 02:40:17] "GET /static/audio/uLKD7QcWQXZTpJksAAAF.wav HTTP/1.1" 206 6247 0.000720
-whisper_full_with_state: input is too short - 170 ms < 1000 ms. consider padding the input audio with silence
-127.0.0.1 - - [15/Apr/2025 02:40:17] "POST /stt/transcribe_stream HTTP/1.1" 200 219 0.002314
-(34653) accepted ('127.0.0.1', 53230)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_Rmj66oLawlptbZ2kAAAH.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-[matroska,webm @ 0x15aa164d0] File ended prematurely at pos. 2357 (0x935)
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/Rmj66oLawlptbZ2kAAAH.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[out#0/wav @ 0x15aa19ab0] video:0KiB audio:34KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.225694%
-size=      34KiB time=00:00:01.07 bitrate= 256.7kbits/s speed= 382x    
-(34653) accepted ('127.0.0.1', 53237)
-(34653) accepted ('127.0.0.1', 53239)
-127.0.0.1 - - [15/Apr/2025 02:40:22] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 1.637292
-Progress:   0%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:40:22] "POST /stt/transcribe_stream HTTP/1.1" 200 271 0.195112
-127.0.0.1 - - [15/Apr/2025 02:40:22] "GET /static/audio/Rmj66oLawlptbZ2kAAAH.wav HTTP/1.1" 206 35051 0.000551
-(34653) accepted ('127.0.0.1', 53400)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_QY3Qt3ZyED5aDn_zAAAJ.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/QY3Qt3ZyED5aDn_zAAAJ.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[matroska,webm @ 0x130623140] File ended prematurely at pos. 3137 (0xc41)
-[out#0/wav @ 0x130627090] video:0KiB audio:43KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.176630%
-size=      43KiB time=00:00:01.37 bitrate= 256.5kbits/s speed= 339x    
-(34653) accepted ('127.0.0.1', 53410)
-(34653) accepted ('127.0.0.1', 53412)
-127.0.0.1 - - [15/Apr/2025 02:40:56] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 1.982351
-127.0.0.1 - - [15/Apr/2025 02:40:56] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 347 0.000659
-127.0.0.1 - - [15/Apr/2025 02:40:56] "GET /static/audio/QY3Qt3ZyED5aDn_zAAAJ.wav HTTP/1.1" 206 44651 0.000483
-Progress:   0%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:40:57] "POST /stt/transcribe_stream HTTP/1.1" 200 270 0.239169
-(34653) accepted ('127.0.0.1', 53813)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_2nP80QwMlxlpebMUAAAL.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/2nP80QwMlxlpebMUAAAL.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[matroska,webm @ 0x13ee2edb0] File ended prematurely at pos. 30407 (0x76c7)
-[out#0/wav @ 0x13ee32f70] video:0KiB audio:446KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.017069%
-size=     446KiB time=00:00:14.27 bitrate= 256.1kbits/s speed= 738x    
-(34653) accepted ('127.0.0.1', 53879)
-(34653) accepted ('127.0.0.1', 53881)
-127.0.0.1 - - [15/Apr/2025 02:42:39] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 14.827285
-127.0.0.1 - - [15/Apr/2025 02:42:39] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 347 0.000577
-127.0.0.1 - - [15/Apr/2025 02:42:39] "GET /static/audio/2nP80QwMlxlpebMUAAAL.wav HTTP/1.1" 206 457455 0.001061
-Progress:   0%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:42:39] "POST /stt/transcribe_stream HTTP/1.1" 200 622 0.320932
-(34653) accepted ('127.0.0.1', 54664)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_7CuiPO5wLcmeXVfEAAAN.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/7CuiPO5wLcmeXVfEAAAN.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[matroska,webm @ 0x159704230] File ended prematurely at pos. 18562 (0x4882)
-[out#0/wav @ 0x15a806cd0] video:0KiB audio:268KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.028409%
-size=     268KiB time=00:00:08.57 bitrate= 256.1kbits/s speed= 653x    
-(34653) accepted ('127.0.0.1', 54703)
-(34653) accepted ('127.0.0.1', 54705)
-127.0.0.1 - - [15/Apr/2025 02:45:41] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 9.190118
-127.0.0.1 - - [15/Apr/2025 02:45:41] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 347 0.000575
-127.0.0.1 - - [15/Apr/2025 02:45:41] "GET /static/audio/7CuiPO5wLcmeXVfEAAAN.wav HTTP/1.1" 206 275054 0.002185
-Progress:   0%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:45:41] "POST /stt/transcribe_stream HTTP/1.1" 200 548 0.313764
-(34653) accepted ('127.0.0.1', 54795)
-ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
-  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      59. 39.100 / 59. 39.100
-  libavcodec     61. 19.101 / 61. 19.101
-  libavformat    61.  7.100 / 61.  7.100
-  libavdevice    61.  3.100 / 61.  3.100
-  libavfilter    10.  4.100 / 10.  4.100
-  libswscale      8.  3.100 /  8.  3.100
-  libswresample   5.  3.100 /  5.  3.100
-  libpostproc    58.  3.100 / 58.  3.100
-Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_sgzRdhdQFwbR82UhAAAP.webm':
-  Metadata:
-    encoder         : Chrome
-  Duration: N/A, start: 0.000000, bitrate: N/A
-  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
-Stream mapping:
-  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
-Press [q] to stop, [?] for help
-Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/sgzRdhdQFwbR82UhAAAP.wav':
-  Metadata:
-    ISFT            : Lavf61.7.100
-  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
-      Metadata:
-        encoder         : Lavc61.19.101 pcm_s16le
-[matroska,webm @ 0x123e31940] File ended prematurely at pos. 111197 (0x1b25d)
-[out#0/wav @ 0x123e35b00] video:0KiB audio:1609KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.004735%
-size=    1609KiB time=00:00:51.47 bitrate= 256.0kbits/s speed= 783x    
-(34653) accepted ('127.0.0.1', 55011)
-(34653) accepted ('127.0.0.1', 55013)
-127.0.0.1 - - [15/Apr/2025 02:46:52] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 200 0 52.113469
-127.0.0.1 - - [15/Apr/2025 02:46:52] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 347 0.000440
-Progress:   0%
-Progress:  54%
-Progress: 100%
-127.0.0.1 - - [15/Apr/2025 02:46:53] "POST /stt/transcribe_stream HTTP/1.1" 200 1642 0.889064
+[2025-05-23 18:34:35,779] DEBUG in stt: Loading model: base.en
+127.0.0.1 - - [23/May/2025 18:34:35] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+Error on request:
 Traceback (most recent call last):
-  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/eventlet/wsgi.py", line 641, in handle_one_response
-    write(b''.join(towrite))
-  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/eventlet/wsgi.py", line 575, in write
-    wfile.flush()
-  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/socket.py", line 723, in write
-    return self._sock.send(b)
-           ^^^^^^^^^^^^^^^^^^
-  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/eventlet/greenio/base.py", line 383, in send
-    return self._send_loop(self.fd.send, data, flags)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/eventlet/greenio/base.py", line 370, in _send_loop
-    return send_method(data, *args)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-BrokenPipeError: [Errno 32] Broken pipe
-
-127.0.0.1 - - [15/Apr/2025 02:46:53] "GET /static/audio/sgzRdhdQFwbR82UhAAAP.wav HTTP/1.1" 206 704932 0.895046
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 336, in execute
+    write(b"")
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 261, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+whisper_full_with_state: input is too short - 950 ms < 1000 ms. consider padding the input audio with silence
+127.0.0.1 - - [23/May/2025 18:34:35] "POST /stt/transcribe_stream HTTP/1.1" 200 -
+127.0.0.1 - - [23/May/2025 18:40:07] "OPTIONS /storage/get_objects HTTP/1.1" 200 -
+127.0.0.1 - - [23/May/2025 18:40:07] "POST /storage/get_objects HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2025 10:32:16] "OPTIONS /storage/get_objects HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2025 10:32:16] "POST /storage/get_objects HTTP/1.1" 200 -
+ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
+  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_HYu-FfvC88_78EXIAAAF.webm':
+  Metadata:
+    encoder         : Chrome
+  Duration: N/A, start: 0.000000, bitrate: N/A
+  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
+Stream mapping:
+  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/HYu-FfvC88_78EXIAAAF.wav':
+  Metadata:
+    ISFT            : Lavf61.7.100
+  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[matroska,webm @ 0x132b076f0] File ended prematurely at pos. 8122 (0x1fba)
+[out#0/wav @ 0x130e05af0] video:0KiB audio:118KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.064484%
+size=     118KiB time=00:00:03.77 bitrate= 256.2kbits/s speed= 514x    
+127.0.0.1 - - [25/May/2025 10:32:22] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 -
+Progress:   0%
+Progress: 100%
+127.0.0.1 - - [25/May/2025 10:32:23] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+127.0.0.1 - - [25/May/2025 10:32:23] "POST /stt/transcribe_stream HTTP/1.1" 200 -
+Error on request:
+Traceback (most recent call last):
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 336, in execute
+    write(b"")
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 261, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
+  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, matroska,webm, from '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/recording_M0nEujHdkK67WGyKAAAH.webm':
+  Metadata:
+    encoder         : Chrome
+  Duration: N/A, start: 0.000000, bitrate: N/A
+  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
+Stream mapping:
+  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, wav, to '/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/backend/static/audio/M0nEujHdkK67WGyKAAAH.wav':
+  Metadata:
+    ISFT            : Lavf61.7.100
+  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[matroska,webm @ 0x126129f10] File ended prematurely at pos. 13210 (0x339a)
+[out#0/wav @ 0x12612e0f0] video:0KiB audio:193KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.039442%
+size=     193KiB time=00:00:06.17 bitrate= 256.1kbits/s speed= 312x    
+127.0.0.1 - - [25/May/2025 10:32:54] "OPTIONS /stt/transcribe_stream HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2025 10:32:54] "[31m[1mPOST /stt/transcribe_stream HTTP/1.1[0m" 400 -
+127.0.0.1 - - [25/May/2025 10:32:54] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+Error on request:
+Traceback (most recent call last):
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 336, in execute
+    write(b"")
+  File "/Users/petthepotat/Documents/code/dated-projects/04-13-2025_speech-to-text-mac/.venv/lib/python3.11/site-packages/werkzeug/serving.py", line 261, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
