@@ -1,38 +1,36 @@
-'use client';
+"use client";
 
-import React from 'react';
-import {ConversationContainerProps} from "./ConversationContent";
+import React from "react";
+import { ConversationContainerProps } from "./ConversationContent";
 
 import styles from "./styles/conversation.module.css";
-
 
 // ---------------------------------------------------------------- //
 // interfaces
 // ---------------------------------------------------------------- //
 
-
-
-
 // ---------------------------------------------------------------- //
 // Conversation Component
 // ---------------------------------------------------------------- //
 
-function Conversation({ currentContext }: ConversationContainerProps) {
+function Conversation({ currentContext, userInfo }: ConversationContainerProps) {
+  // states
+  const [messages, setMessages] = React.useState<any[]>([]);
 
-    // states
-    const [messages, setMessages] = React.useState<any[]>([]);
-    console.log(currentContext);
+  // functions
+  function fetchMessages() {
+    // function fetches messages from server
+  }
 
-    // functions
+  // effects
 
-
-    // effects
-
-    return (
-        <div className={styles["container-item"]}>
-            Hello World
-        </div>
-    );
+  return (
+    <div className={styles["container-item"]}>
+      <div className={styles["conversation-container"]}>
+        <div>Hello World</div>
+      </div>
+    </div>
+  );
 }
 
 export default Conversation;

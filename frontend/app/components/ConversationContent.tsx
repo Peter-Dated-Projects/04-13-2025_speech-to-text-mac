@@ -1,38 +1,39 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
-import AudioRecorder from './AudioRecorder';
-import { ConversationFetchItem } from './ConversationSidebar';
-import Conversation from './Conversation';
+import AudioRecorder from "./AudioRecorder";
+import { ConversationFetchItem } from "./ConversationSidebar";
+import Conversation from "./Conversation";
 
 import styles from "./styles/conversation.module.css";
+
+import { UserInformation } from "../page";
 
 // ---------------------------------------------------------------- //
 // interfaces
 // ---------------------------------------------------------------- //
 
 interface ConversationContainerProps {
-    currentContext: ConversationFetchItem | null;
-};
-
+  currentContext: ConversationFetchItem | null;
+  userInfo: UserInformation;
+}
 
 // ---------------------------------------------------------------- //
 // Conversation Component
 // ---------------------------------------------------------------- //
 
-function ConversationContainer({currentContext}: ConversationContainerProps) {
-
-    return (
-        <div className={styles["container"]} >
-            <div style={{height: "50%"}}>
-                <AudioRecorder currentContext={currentContext}/>
-            </div>
-            <div style={{height: "50%"}}>
-                <Conversation currentContext={currentContext}/>
-            </div>
-        </div>  
-    );
+function ConversationContainer({ currentContext, userInfo }: ConversationContainerProps) {
+  return (
+    <div className={styles["container"]}>
+      <div>
+        <AudioRecorder currentContext={currentContext} userInfo={userInfo} />
+      </div>
+      <div>
+        <Conversation currentContext={currentContext} userInfo={userInfo} />
+      </div>
+    </div>
+  );
 }
 
 export type { ConversationContainerProps };

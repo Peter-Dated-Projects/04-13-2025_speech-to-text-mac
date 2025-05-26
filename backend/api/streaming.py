@@ -164,8 +164,6 @@ def handle_stop_recording():
     print(f"Saved recording for client {sid}")
 
     # emit the file path to the client
-
-    print(_audio_instance)
     emit(
         "result_file_path",
         {

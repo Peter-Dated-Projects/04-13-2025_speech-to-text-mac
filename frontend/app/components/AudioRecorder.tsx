@@ -8,6 +8,7 @@ import cstyles from "./styles/conversation.module.css";
 import styles from "./styles/audio.module.css";
 
 import { ConversationFetchItem } from "./ConversationSidebar";
+import { UserInformation } from "../page";
 
 // ------------------------------------------------------------ //
 // io instance
@@ -48,6 +49,7 @@ const audioConstraints = {
 
 interface AudioRecorderProps {
   currentContext: ConversationFetchItem | null;
+  userInfo: UserInformation;
 }
 
 interface Segment {
@@ -61,11 +63,32 @@ interface ModelSelection {
   model_id: string;
 }
 
+interface TranscriptSegment {
+  start: number;
+  end: number;
+  text: string;
+}
+
+// ------------------------------------------------------------- //
+// TranscriptSegment component
+// ---------------------------------------------------------------- //
+
+function TranscriptSegment({ start, end, text }: TranscriptSegment) {
+  return (
+    <div className={styles["transcript-segment"]}>
+      <span>
+        {start} - {end}
+      </span>
+      <span>{text}</span>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------ //
 // AudioRecorder component
 // ---------------------------------------------------------------- //
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ currentContext }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ currentContext, userInfo }) => {
   // states
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -301,16 +324,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ currentContext }) => {
         </div>
 
         {/* Error Div -- to be removed (add in notifications instead???) */}
-        <div>{error && <p>{error}</p>}</div>
+        {/* <div> <p>{error}</p>}</div> */}
 
         {/* Transcription and Audio Playback */}
         <div className={styles["content-container"]}>
           {/* Audio Playback */}
           <div className={styles["audio-container"]}>
-            Hello
+            <h3>Audio Playback</h3>
             {audioUrl && (
               <div>
-                <h3>Playback</h3>
                 <audio controls src={audioUrl}></audio>
               </div>
             )}
@@ -319,15 +341,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ currentContext }) => {
           {/* Transcriptions */}
           <div className={styles["transcription-container"]}>
             <h3>Transcription</h3>
-            <div>
+            <div className={styles["transcription-segments"]}>
               {transcriptionValue
-                ? transcriptionValue.map((item, index) => (
-                    <div key={index}>
-                      <span>
-                        {item.start} - {item.end}
-                      </span>
-                      <span>{item.text}</span>
-                    </div>
+                ? transcriptionValue.flatMap((item, index) => (
+                    <TranscriptSegment
+                      key={index}
+                      start={item.start}
+                      end={item.end}
+                      text={item.text}
+                    />
                   ))
                 : "No transcription available"}
             </div>

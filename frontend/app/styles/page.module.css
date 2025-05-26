@@ -114,9 +114,9 @@
 
 .content-container {
   grid-area: content;
-
   padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--background-primary), 0.1);
+  filter: brightness(1.5);
   height: 100%;
 }
 
