@@ -40,4 +40,67 @@
     border-radius: 5px;
     padding: 10px;
     height: 100%;
+    /* overflow-y: auto; */ /* Let messages-list handle scrolling */
+    display: flex; /* Added for layout of title + list */
+    flex-direction: column; /* Added for layout of title + list */
+}
+
+.conversation-title {
+    color: white;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.messages-list {
+    flex-grow: 1;
+    overflow-y: auto; /* For scrolling messages */
+}
+
+.no-messages, .messages-info { /* Combined .no-messages with .messages-info */
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    padding-top: 20px;
+    font-style: italic;
+}
+
+.messages-error {
+    text-align: center;
+    color: #ff8c8c; /* A slightly lighter red for better visibility on dark themes */
+    padding-top: 20px;
+    font-weight: bold;
+}
+
+.message-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.message-user {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.message-timestamp {
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.message-text {
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: pre-wrap; /* To respect newlines in text */
 }

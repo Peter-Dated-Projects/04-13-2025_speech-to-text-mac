@@ -205,6 +205,50 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ currentContext, userInfo 
                     text: segment[2],
                   }))
                 );
+
+                // Call new endpoint to save segments
+                if (currentContext && currentContext.id && userInfo && userInfo.id && data.segments) {
+                  const segmentsPayload = data.segments.map((segment: [number, number, string]) => ({
+                    start_time: segment[0],
+                    end_time: segment[1],
+                    text: segment[2],
+                  }));
+
+                  const addSegmentsPayload = {
+                    conversation_id: currentContext.id,
+                    user_id: userInfo.id,
+                    segments_data: segmentsPayload,
+                    // recording_id is intentionally omitted as per requirements
+                  };
+
+                  const addSegmentsEndpoint = `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/storage/add_segments_to_conversation`;
+
+                  fetch(addSegmentsEndpoint, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Accept": "application/json",
+                    },
+                    body: JSON.stringify(addSegmentsPayload),
+                  })
+                  .then(response => response.json())
+                  .then(saveData => {
+                    if (saveData.status === "ok") {
+                      console.log("Successfully saved transcriptions to conversation:", saveData);
+                    } else {
+                      console.error("Failed to save transcriptions:", saveData.message);
+                      // Optionally, set an error state to inform the user
+                    }
+                  })
+                  .catch(saveError => {
+                    console.error("Error saving transcriptions:", saveError);
+                    // Optionally, set an error state
+                  });
+
+                } else {
+                  console.warn("Cannot save transcriptions: Missing conversation context, user info, or segments.");
+                }
+
               } else {
                 setError("No transcription available");
               }
@@ -215,7 +259,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ currentContext, userInfo 
             });
 
           // Disconnect the socket after receiving the file path
-          socketRef.current.disconnect();
+          // socketRef.current.disconnect(); // Keep socket open if further interaction is needed, or close if truly done.
+                                        // For now, let's assume it's okay to leave open or that STT was the last step for this socket interaction.
+                                        // The original code disconnected it. Let's re-evaluate if this causes issues.
+                                        // For now, keeping the disconnect as it was.
+          if (socketRef.current) { // Check if current exists before disconnecting
+            socketRef.current.disconnect();
+          }
         }
       );
 

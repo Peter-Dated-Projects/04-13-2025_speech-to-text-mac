@@ -34,4 +34,5 @@ class Conversation(Document):
 
     # keep track of number of users in the conversation
     participants = ListField(ReferenceField("User"))
-    sessions = ListField(ReferenceField("Session"), default=[])
+    # sessions = ListField(ReferenceField("Session"), default=[]) # Old field
+    chunks = ListField(ReferenceField("ConversationChunk"), default=[]) # New field

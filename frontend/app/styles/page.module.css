@@ -120,4 +120,16 @@
   height: 100%;
 }
 
+.sidebar-message {
+  padding: 10px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-message-error {
+  padding: 10px;
+  text-align: center;
+  color: #ff6b6b; /* A light red for errors */
+  font-weight: bold;
+}
 

@@ -2,16 +2,18 @@ from flask import Blueprint, jsonify, request
 from flask import current_app as app
 
 import os
+from datetime import datetime, timedelta
+
 
 from backend import MongoDBInstance
 from typing import Optional, Union, List, Dict, Any
 from bson import json_util, ObjectId, Binary
 import json
 
-from models import conversation, user, segment
+from models import conversation, user, segment, recording as recording_model, conversation_chunk as cc_model
 
 
-from mongoengine import NotUniqueError
+from mongoengine import NotUniqueError, DoesNotExist # Added DoesNotExist for cleaner error handling
 
 # --------------------------------------------------------------------------- #
 # blueprint
@@ -528,8 +530,75 @@ def create_conversation():
 
 @storage_bp.route("/get_conversation_messages", methods=["GET"])
 def get_conversation_messages():
-    print(request.args)
-    pass
+    conversation_id = request.args.get("conversation_id")
+    if not conversation_id:
+        return jsonify({"status": "error", "message": "conversation_id is required"}), 400
+
+    try:
+        # Validate ObjectId
+        if not ObjectId.is_valid(conversation_id):
+            return jsonify({"status": "error", "message": "Invalid conversation_id format"}), 400
+        conversation_obj_id = ObjectId(conversation_id)
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Invalid conversation_id format: {str(e)}"}), 400
+
+    # Fetch conversation from MongoDB
+    try:
+        # Use .get() for immediate DoesNotExist if not found, vs .first() which returns None
+        conv_obj = conversation.Conversation.objects.get(id=conversation_obj_id)
+    except DoesNotExist:
+        return jsonify({"status": "error", "message": "Conversation not found"}), 404
+    except Exception as e:
+        app.logger.error(f"Error fetching conversation {conversation_id}: {e}")
+        return jsonify({"status": "error", "message": "Error fetching conversation"}), 500
+
+    all_segments_data = []
+
+    # Fetch all referenced chunks at once for efficiency, ordered by their creation.
+    # This assumes chunks are added chronologically. If updated_at can change order, sort by that.
+    # For simplicity, let's stick to created_at for chunk order for now.
+    chunk_ids = [chunk.id for chunk in conv_obj.chunks]
+    ordered_chunks = cc_model.ConversationChunk.objects(id__in=chunk_ids).order_by('created_at')
+
+    for chunk_obj in ordered_chunks:
+        # Fetch all segments for the current chunk at once.
+        # Segment references within a chunk are assumed to be in order of addition.
+        # If segments need specific sub-sorting within a chunk, .order_by() can be added here.
+        segment_ids_in_chunk = [s.id for s in chunk_obj.segments]
+        segments_in_chunk = segment.Segment.objects(id__in=segment_ids_in_chunk)
+
+        # Create a map for quick lookup if segments are not ordered by default from DB
+        segment_map = {s.id: s for s in segments_in_chunk}
+
+        # Iterate through the original segment references to maintain order within chunk
+        for segment_ref in chunk_obj.segments:
+            segment_obj = segment_map.get(segment_ref.id)
+            if not segment_obj:
+                app.logger.warn(f"Segment with id {segment_ref.id} referenced in chunk {chunk_obj.id} not found. Skipping.")
+                continue
+
+            user_id_str = None
+            if segment_obj.user and hasattr(segment_obj.user, 'id'):
+                user_id_str = str(segment_obj.user.id)
+
+            # Segment.created_at is a StringField from str(datetime.utcnow())
+            # It should be ISO-like and sortable as a string.
+            segment_data = {
+                "id": str(segment_obj.id), # Good to include segment ID
+                "text": segment_obj.text,
+                "user_id": user_id_str,
+                "start_time": segment_obj.start_time,
+                "end_time": segment_obj.end_time,
+                "created_at": segment_obj.created_at,
+                # "updated_at": segment_obj.updated_at # Optional, if needed by frontend
+            }
+            all_segments_data.append(segment_data)
+
+    # Sort all_segments by their 'created_at' timestamp.
+    # Since created_at is stored as str(datetime.utcnow()), it should be lexicographically sortable.
+    all_segments_data.sort(key=lambda s: s['created_at'])
+
+    return jsonify({"status": "ok", "messages": all_segments_data}), 200
 
 
 @storage_bp.route("/create_user", methods=["POST"])
@@ -614,3 +683,126 @@ def create_user():
         )
 
     return jsonify({"status": "ok", "id": str(result.id)}), 200
+
+
+@storage_bp.route("/add_segments_to_conversation", methods=["POST"])
+def add_segments_to_conversation():
+    data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "No data provided"}), 400
+
+    conversation_id = data.get("conversation_id")
+    user_id = data.get("user_id")
+    segments_data = data.get("segments_data")
+    recording_id = data.get("recording_id") # Optional
+
+    if not all([conversation_id, user_id, segments_data]):
+        return jsonify({"status": "error", "message": "Missing conversation_id, user_id, or segments_data"}), 400
+
+    if not isinstance(segments_data, list):
+        return jsonify({"status": "error", "message": "segments_data must be a list"}), 400
+
+    try:
+        user_obj = user.User.objects.get(id=ObjectId(user_id))
+    except DoesNotExist:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    except Exception as e: # Handles invalid ObjectId format for user_id
+        return jsonify({"status": "error", "message": f"Invalid user_id: {str(e)}"}), 400
+
+    try:
+        conv_obj = conversation.Conversation.objects.get(id=ObjectId(conversation_id))
+    except DoesNotExist:
+        return jsonify({"status": "error", "message": "Conversation not found"}), 404
+    except Exception as e: # Handles invalid ObjectId format for conversation_id
+        return jsonify({"status": "error", "message": f"Invalid conversation_id: {str(e)}"}), 400
+
+    recording_obj = None
+    if recording_id:
+        try:
+            recording_obj = recording_model.Recording.objects.get(id=ObjectId(recording_id))
+        except DoesNotExist:
+            app.logger.warn(f"Recording with id {recording_id} not found. A dummy recording will be used.")
+            # Fall through to create a dummy recording if specified ID not found
+        except Exception as e: # Handles invalid ObjectId format for recording_id
+            app.logger.warn(f"Invalid recording_id format {recording_id}: {str(e)}. A dummy recording will be used.")
+            # Fall through to create a dummy recording
+
+    if not recording_obj:
+        try:
+            # Create and save a placeholder Recording
+            app.logger.info(f"Creating dummy recording for conversation {conversation_id}")
+            recording_obj = recording_model.Recording(
+                audio_data=b'', # Empty binary data
+                audio_duration=0.0 # Zero duration
+            ).save()
+        except Exception as e:
+            app.logger.error(f"Failed to create dummy recording: {e}")
+            return jsonify({"status": "error", "message": f"Failed to create dummy recording: {str(e)}"}), 500
+
+    conversation_modified = False
+
+    for seg_data in segments_data:
+        if not isinstance(seg_data, dict) or 'text' not in seg_data or \
+           'start_time' not in seg_data or 'end_time' not in seg_data:
+            app.logger.warn(f"Skipping invalid segment data: {seg_data}")
+            continue
+
+        segment_created_at_dt = datetime.utcnow() # Actual datetime object for logic
+
+        # Create and save a Segment object
+        # Segment.created_at and updated_at are StringFields, they'll store the string representation
+        new_segment = segment.Segment(
+            text=seg_data['text'],
+            start_time=int(seg_data['start_time']),
+            end_time=int(seg_data['end_time']),
+            user=user_obj,
+            recording=recording_obj,
+            created_at=str(segment_created_at_dt),
+            updated_at=str(segment_created_at_dt)
+        )
+        new_segment.save()
+
+        # Chunking Logic
+        latest_chunk = None
+        if conv_obj.chunks:
+            # Assuming chunks are implicitly ordered or we fetch the latest by updated_at
+            # For robustness, explicitly sort by updated_at if not guaranteed
+            # latest_chunk = cc_model.ConversationChunk.objects(conversation=conv_obj).order_by('-updated_at').first()
+            # However, if conv_obj.chunks is already populated and managed correctly, the last one is the latest.
+            # Let's fetch from DB for reliability unless performance is an issue / specific ordering in conv_obj.chunks is guaranteed
+            try:
+                latest_chunk = cc_model.ConversationChunk.objects(id__in=[c.id for c in conv_obj.chunks]).order_by('-updated_at').first()
+            except Exception as e:
+                app.logger.error(f"Error fetching latest chunk: {e}")
+
+
+        new_chunk_needed = True
+        if latest_chunk:
+            # latest_chunk.updated_at is DateTimeField, so it's a datetime object
+            time_diff_ok = (segment_created_at_dt - latest_chunk.updated_at) <= timedelta(minutes=5)
+            count_ok = latest_chunk.message_count < 10
+            if time_diff_ok and count_ok:
+                new_chunk_needed = False
+                target_chunk = latest_chunk
+
+        if new_chunk_needed:
+            target_chunk = cc_model.ConversationChunk(
+                conversation=conv_obj,
+                created_at=segment_created_at_dt, # Store actual datetime
+                updated_at=segment_created_at_dt  # Store actual datetime
+            )
+            # This save is important if Conversation.chunks is not automatically persisting new refs
+            # target_chunk.save() # Save here if not relying on conversation save to cascade
+            conv_obj.chunks.append(target_chunk) # Add ref to conversation
+            conversation_modified = True # Mark conversation for saving
+
+        target_chunk.segments.append(new_segment)
+        target_chunk.message_count += 1
+        target_chunk.updated_at = segment_created_at_dt # Update chunk's last message time
+        target_chunk.save() # Save chunk (either new or existing)
+
+    if conversation_modified:
+        conv_obj.updated_at = datetime.utcnow() # Update conversation's last modified time
+        conv_obj.save()
+
+    return jsonify({"status": "ok", "message": "Segments added successfully"}), 200

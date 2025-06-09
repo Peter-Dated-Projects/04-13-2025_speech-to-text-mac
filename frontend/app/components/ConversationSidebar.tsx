@@ -12,41 +12,41 @@ import { UserInformation } from "../page";
 // interfaces
 // ---------------------------------------------------------------- //
 
-interface ConversationSidebarProps {
-  onConversationClick: (conversation: ConversationItemProps) => void;
-  userInfo: UserInformation;
-}
-
-interface ConversationItemProps {
-  id: string;
-  name: string;
-  description: string;
-  updated_at: string;
-}
-
+// This represents the full conversation object fetched from the backend
 interface ConversationFetchItem {
-  _id: string;
+  _id: { $oid: string }; // Keep original MongoDB ID structure
   title: string;
   description: string;
-
-  audio_data: string;
-  audio_duration: number;
-  compressed: boolean;
-  // TODO - update this later
-  segment_ids: string[];
-
-  created_at: string;
-  updated_at: string;
-
-  // TODO - update this later
-  participants_ids: string[];
+  audio_data?: string; // Optional fields based on previous definition
+  audio_duration?: number;
+  compressed?: boolean;
+  segment_ids?: string[];
+  created_at: { $date: string }; // Keep original MongoDB date structure
+  updated_at: { $date: string }; // Keep original MongoDB date structure
+  participants_ids?: string[];
 }
+
+// Props for the individual item display in the sidebar
+interface SideBarDisplayItemProps {
+  id: string; // Actual ID string
+  name: string;
+  description: string;
+  updated_at: string; // Store as ISO string for sortability, format for display
+}
+
+
+interface ConversationSidebarProps {
+  onConversationClick: (conversation: ConversationFetchItem) => void; // Pass full item
+  userInfo: UserInformation;
+  onConversationsFetched?: (conversations: ConversationFetchItem[]) => void;
+}
+
 
 // ---------------------------------------------------------------- //
 // updateSidebar
 // ---------------------------------------------------------------- //
 
-function retrieveConversations(userInfo: UserInformation) {
+function retrieveConversations(userInfo: UserInformation): Promise<ConversationFetchItem[]> {
   // fetch conversations from the backend
   console.log("Fetching conversations...");
 
@@ -58,6 +58,10 @@ function retrieveConversations(userInfo: UserInformation) {
 
   // Create the final request URL with query parameters
   const finalRequestURL = new URL(target_url);
+  if (!requestArgs.user_id) {
+    console.error("User ID is missing for retrieveConversations");
+    return Promise.resolve([]); // Return empty if no user_id
+  }
   finalRequestURL.searchParams.append("user_id", requestArgs.user_id);
 
   console.log("Target URL:", finalRequestURL.toString());
@@ -78,44 +82,30 @@ function retrieveConversations(userInfo: UserInformation) {
       return response.json();
     })
     .then((data) => {
-      return data;
+      // Ensure data has conversations and it's an array
+      if (data && data.conversations && Array.isArray(data.conversations)) {
+        // Directly return conversations if they match ConversationFetchItem structure
+        // The backend returns _id: { $oid: string }, title, description, updated_at: { $date: string } etc.
+        // This matches ConversationFetchItem if we define it carefully.
+        console.log("Fetched conversations (raw):", data.conversations);
+        return data.conversations as ConversationFetchItem[];
+      } else {
+        console.warn("No conversations found or data in unexpected format:", data);
+        return [];
+      }
     })
     .catch((error) => {
       console.error("Error fetching conversations:", error);
-      return [];
-    })
-    .then((data) => {
-      // Format data
-      console.log("Fetched conversations:", data);
-      if (!data.conversations || data.conversations.length === 0) {
-        console.warn("No conversations found");
-        return [];
-      }
-
-      // Map the data to the expected format
-      const result = data.conversations.map(
-        (item: {
-          _id: { $oid: string };
-          title: string;
-          description: string;
-          updated_at: { $date: string };
-        }) => ({
-          id: item._id.$oid,
-          name: item.title,
-          description: item.description,
-          updated_at: new Date(item.updated_at.$date).toLocaleString(),
-        })
-      );
-
-      return result;
+      return []; // Return empty array on error
     });
 }
 
-function createNewConversation(userInfo: UserInformation) {
+
+function createNewConversation(userInfo: UserInformation): Promise<ConversationFetchItem | null> {
   // grab the test user information
   if (!userInfo || !userInfo.id) {
-    console.error("User information is not available");
-    return Promise.reject(new Error("User information is not available"));
+    console.error("User information is not available for createNewConversation");
+    return Promise.resolve(null);
   }
 
   // APPROVED - create a new conversation in the database
@@ -125,10 +115,12 @@ function createNewConversation(userInfo: UserInformation) {
   console.log("Target URL:", target_url);
 
   const information = {
-    user_id: userInfo.id,
+    user_id: userInfo.id, // Make sure UserInformation has id
     data: {
+      // title: "New Conversation", // Optionally set a default title
       description: "This is a new conversation.",
-      participants: [userInfo.id], // TODO - update this later
+      participants: [userInfo.id],
+      // No need to send created_at/updated_at from client for new conversation
     },
   };
 
@@ -148,16 +140,31 @@ function createNewConversation(userInfo: UserInformation) {
       return response.json();
     })
     .then((data) => {
-      // Update sidebar -- no need to query - just add a new item to sidebar
-      console.log("New conversation created:", data);
-
-      const conversationItem: ConversationItemProps = {
-        id: data._id.$oid,
-        name: data.title,
-        description: data.description,
-        updated_at: new Date(data.updated_at.$date).toLocaleString(),
-      };
-      return conversationItem;
+      // The backend returns the created conversation object with _id, title, description, updated_at ($date)
+      // This should match ConversationFetchItem structure
+      if (data && data._id && data._id.$oid && data.title && data.updated_at && data.updated_at.$date) {
+        console.log("New conversation created (raw):", data);
+        // Constructing an object that matches ConversationFetchItem
+        // The backend response already includes _id as an object {$oid: string}
+        // and updated_at as an object {$date: string}
+        const newConversation: ConversationFetchItem = {
+            _id: data._id, // e.g. {$oid: "actual_id_string"}
+            title: data.title,
+            description: data.description || "",
+            created_at: data.created_at || { $date: new Date().toISOString() }, // Fallback if not sent by backend
+            updated_at: data.updated_at, // e.g. {$date: "iso_string"}
+            // other fields can be undefined or have defaults if not in response
+            audio_data: data.audio_data,
+            audio_duration: data.audio_duration,
+            compressed: data.compressed,
+            segment_ids: data.segment_ids || [],
+            participants_ids: data.participants_ids || [userInfo.id!]
+        };
+        return newConversation;
+      } else {
+        console.error("Created conversation data in unexpected format:", data);
+        return null;
+      }
     })
     .catch((error) => {
       console.error("Error creating new conversation:", error);
@@ -169,14 +176,20 @@ function createNewConversation(userInfo: UserInformation) {
 // Conversation Sidebar
 // ---------------------------------------------------------------- //
 
-function SideBarItem({ name, updated_at }: ConversationItemProps) {
-  const date = new Date(updated_at);
+// Props for SideBarItem - it only needs a few fields for display
+interface SideBarItemDisplayProps {
+  item: ConversationFetchItem; // Pass the full item
+  onClick: () => void; // Click handler
+}
+
+function SideBarItem({ item, onClick }: SideBarItemDisplayProps) {
+  // Use item.title and item.updated_at.$date for display
+  const name = item.title;
+  const dateStr = item.updated_at.$date; // This is an ISO string
+
+  const date = new Date(dateStr);
   const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  // get current date
   const currentDate = new Date();
-
-  // check if same day
   const isSameDay =
     date.getDate() === currentDate.getDate() &&
     date.getMonth() === currentDate.getMonth() &&
@@ -185,10 +198,7 @@ function SideBarItem({ name, updated_at }: ConversationItemProps) {
   return (
     <div
       className={styles["sidebar-list-item"]}
-      onClick={() => {
-        console.log("Clicked on:", name);
-        console.log("CHANGE THIS PLEASE");
-      }}
+      onClick={onClick} // Use the passed onClick handler
     >
       <h3>{name}</h3>
       <small>Updated at: {isSameDay ? time : date.toDateString()}</small>
@@ -200,50 +210,94 @@ function SideBarItem({ name, updated_at }: ConversationItemProps) {
 // Conversation Sidebar
 // ---------------------------------------------------------------- //
 
-function ConversationSidebar({ onConversationClick, userInfo }: ConversationSidebarProps) {
-  // retrieve all of the conversation objects from database
-
+function ConversationSidebar({ onConversationClick, userInfo, onConversationsFetched }: ConversationSidebarProps) {
   const [showSidebar, setShowSidebar] = React.useState(true);
-  const [dbConversations, setDBConversations] = React.useState<ConversationItemProps[]>([]);
-
-  // ------------------------------------------------- //
-  // functions
-  // ------------------------------------------------- //
+  const [dbConversations, setDBConversations] = React.useState<ConversationFetchItem[]>([]);
+  const [isLoadingConversations, setIsLoadingConversations] = React.useState<boolean>(false);
+  const [conversationError, setConversationError] = React.useState<string | null>(null);
 
   function toggleSidebar() {
     setShowSidebar(!showSidebar);
   }
 
-  // ------------------------------------------------- //
-  // on load events
-  // ------------------------------------------------- //
-
-  useEffect(() => {
+  const handleRefreshConversations = React.useCallback(() => {
     if (!userInfo || !userInfo.id) {
-      console.error("[EXPECTED] User information is not available");
+      console.warn("User information is not available for refreshing conversations. Skipping fetch.");
+      setDBConversations([]);
+      setConversationError(null); // Clear previous errors
+      setIsLoadingConversations(false); // Not loading if no user
+      if (onConversationsFetched) {
+        onConversationsFetched([]);
+      }
       return;
     }
 
-    // update sidebar conversations
+    setIsLoadingConversations(true);
+    setConversationError(null);
+
     retrieveConversations(userInfo)
       .then((data) => {
         console.log("Conversations data:", data);
-        if (data && data.length > 0) {
-          setDBConversations(data);
-
-          console.log("Conversations:", data);
-        } else {
-          console.log("No conversations found");
+        setDBConversations(data);
+        if (onConversationsFetched) {
+          onConversationsFetched(data);
         }
       })
       .catch((error) => {
         console.error("Error fetching conversations:", error);
+        setDBConversations([]);
+        setConversationError("Failed to load conversations.");
+        if (onConversationsFetched) {
+          onConversationsFetched([]);
+        }
+      })
+      .finally(() => {
+        setIsLoadingConversations(false);
       });
-  }, [userInfo]); // runs on user info change
+  }, [userInfo, onConversationsFetched]);
 
-  // --------------------------------------------------------------- //
-  // Return Object
-  // --------------------------------------------------------------- //
+  useEffect(() => {
+    handleRefreshConversations();
+  }, [handleRefreshConversations]); // Runs on component mount and when userInfo changes
+
+  const handleCreateNewConversation = () => {
+    if (!userInfo || !userInfo.id) {
+        console.error("User information is not available for creating conversation.");
+        return;
+    }
+    // Optionally, set loading/error states for create operation if it's slow
+    createNewConversation(userInfo).then((newConversation) => {
+      if (newConversation) {
+        const updatedConversations = [...dbConversations, newConversation];
+        setDBConversations(updatedConversations);
+        if (onConversationsFetched) {
+          onConversationsFetched(updatedConversations);
+        }
+        onConversationClick(newConversation);
+      } else {
+        // Optionally, set an error state for creation failure
+        console.error("Failed to create new conversation or newConversation is null");
+        // alert("Failed to create new conversation."); // Simple error feedback
+      }
+    });
+  };
+
+  let conversationContent;
+  if (isLoadingConversations) {
+    conversationContent = <p className={styles["sidebar-message"]}>Loading conversations...</p>;
+  } else if (conversationError) {
+    conversationContent = <p className={styles["sidebar-message-error"]}>{conversationError}</p>;
+  } else if (dbConversations.length === 0) {
+    conversationContent = <p className={styles["sidebar-message"]}>No conversations found.</p>;
+  } else {
+    conversationContent = dbConversations.map((conversation, i) => (
+      <SideBarItem
+        key={conversation._id.$oid || i}
+        item={conversation}
+        onClick={() => onConversationClick(conversation)}
+      />
+    ));
+  }
 
   return (
     <div className={styles["sidebar-container"]}>
@@ -253,48 +307,17 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
           clickFunction={toggleSidebar}
           css={styles["sidebar-icon-button"]}
         />
-        {/* <Icon icon="search" svg={<SearchIcon />} onClick={() => {}} /> */}
-
-        {/* MOVE THIS INTO AS SEPARATE FUNCATION */}
-        <button
-          onClick={() => {
-            retrieveConversations(userInfo)
-              .then((data) => {
-                console.log("Conversations data:", data);
-                if (data && data.length > 0) {
-                  setDBConversations(data);
-                  console.log("Conversations updated:", data);
-                } else {
-                  console.log("No conversations found");
-                }
-              })
-              .catch((error) => {
-                console.error("Error fetching conversations:", error);
-              });
-          }}
-        >
-          Refresh
+        <button onClick={handleRefreshConversations} disabled={isLoadingConversations}>
+          {isLoadingConversations ? "Refreshing..." : "Refresh"}
         </button>
-
         <Icon
           svg={<NewChatIcon />}
-          clickFunction={() => {
-            createNewConversation(userInfo).then((result) => {
-              if (!result) {
-                console.error("Failed to create new conversation");
-                return;
-              }
-
-              // Add the new conversation to the sidebar
-              const newArray = [...dbConversations, result];
-              setDBConversations(newArray);
-            });
-          }}
+          clickFunction={handleCreateNewConversation}
           css={styles["sidebar-icon-button"]}
+          // disabled={isLoadingConversations} // Consider disabling during load
         />
       </div>
 
-      {/* debug _- show testing user id */}
       <div
         style={{
           padding: "12px 16px",
@@ -303,29 +326,20 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
           textWrap: "nowrap",
           overflow: "hidden",
           overflowX: "auto",
+          color: "white", // Ensuring text is visible on dark background
         }}
       >
         {userInfo.id == null ? <p>User not logged in</p> : <p>User ID: {userInfo.id}</p>}
       </div>
 
-      {/* Sidebar list */}
       <div className={styles["sidebar-list"]}>
-        {dbConversations.map((conversation, i) => (
-          <SideBarItem
-            key={i}
-            id={conversation.id}
-            name={conversation.name}
-            description={conversation.description}
-            updated_at={conversation.updated_at}
-            onClick={() => onConversationClick(conversation)}
-          />
-        ))}
+        {conversationContent}
       </div>
     </div>
   );
 }
 
 export default ConversationSidebar;
-export { retrieveConversations, SideBarItem };
-export type { ConversationItemProps };
-export type { ConversationFetchItem };
+// Export retrieveConversations if it's used elsewhere, otherwise keep it local.
+// export { retrieveConversations };
+export type { ConversationFetchItem, SideBarDisplayItemProps as SideBarItemProps }; // Exporting updated types
