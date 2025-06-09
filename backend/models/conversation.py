@@ -18,20 +18,20 @@ from mongoengine import (
 
 class Conversation(Document):
     meta = {
-        "collection": "conversations",
+        "collection": "default_conversations",
     }
+
+    type = StringField(
+        required=True, default="conversation"
+    )  # type of conversation, text or audio
 
     # information about conversations
     title = StringField(required=True)
     description = StringField()
-
-    audio_data = BinaryField(required=True)
-    audio_duration = DecimalField(required=True)
-    compressed = BooleanField(default=False)
-    segment_ids = ListField(ReferenceField("Segment"))
 
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)
 
     # keep track of number of users in the conversation
     participants = ListField(ReferenceField("User"))
+    sessions = ListField(ReferenceField("Session"), default=[])

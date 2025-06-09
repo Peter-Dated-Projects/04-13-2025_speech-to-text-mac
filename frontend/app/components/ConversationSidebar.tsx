@@ -13,7 +13,7 @@ import { UserInformation } from "../page";
 // ---------------------------------------------------------------- //
 
 interface ConversationSidebarProps {
-  onConversationClick: (conversation: ConversationFetchItem) => void;
+  onConversationClick: (conversation: ConversationItemProps) => void;
   userInfo: UserInformation;
 }
 
@@ -22,7 +22,6 @@ interface ConversationItemProps {
   name: string;
   description: string;
   updated_at: string;
-  onClick: () => void;
 }
 
 interface ConversationFetchItem {
@@ -47,22 +46,29 @@ interface ConversationFetchItem {
 // updateSidebar
 // ---------------------------------------------------------------- //
 
-function updateSidebar() {
+function retrieveConversations(userInfo: UserInformation) {
   // fetch conversations from the backend
   console.log("Fetching conversations...");
 
-  const target_url = `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/storage/get_objects`;
-  console.log("Target URL:", target_url);
-  return fetch(target_url, {
-    method: "POST",
+  const target_url = `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/storage/get_conversations`;
+  const requestType = "GET";
+  const requestArgs = {
+    user_id: userInfo.id,
+  };
+
+  // Create the final request URL with query parameters
+  const finalRequestURL = new URL(target_url);
+  finalRequestURL.searchParams.append("user_id", requestArgs.user_id);
+
+  console.log("Target URL:", finalRequestURL.toString());
+
+  // Request to fetch conversations
+  return fetch(finalRequestURL.toString(), {
+    method: requestType,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({
-      collection: process.env.NEXT_PUBLIC_DB_CONVERSATIONS_COLLECTION,
-      filter: {},
-    }),
   })
     .then((response) => {
       console.log("Response status:", response);
@@ -77,27 +83,53 @@ function updateSidebar() {
     .catch((error) => {
       console.error("Error fetching conversations:", error);
       return [];
+    })
+    .then((data) => {
+      // Format data
+      console.log("Fetched conversations:", data);
+      if (!data.conversations || data.conversations.length === 0) {
+        console.warn("No conversations found");
+        return [];
+      }
+
+      // Map the data to the expected format
+      const result = data.conversations.map(
+        (item: {
+          _id: { $oid: string };
+          title: string;
+          description: string;
+          updated_at: { $date: string };
+        }) => ({
+          id: item._id.$oid,
+          name: item.title,
+          description: item.description,
+          updated_at: new Date(item.updated_at.$date).toLocaleString(),
+        })
+      );
+
+      return result;
     });
 }
 
 function createNewConversation(userInfo: UserInformation) {
-  // create a new conversation in the database
-  console.log("creating new conversation...");
-
-  const target_url = `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/storage/create_conversation`;
-  console.log("Target URL:", target_url);
-
   // grab the test user information
   if (!userInfo || !userInfo.id) {
     console.error("User information is not available");
     return Promise.reject(new Error("User information is not available"));
   }
 
-  const testUserID = userInfo.id;
+  // APPROVED - create a new conversation in the database
+  console.log("creating new conversation...");
+
+  const target_url = `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/storage/create_conversation`;
+  console.log("Target URL:", target_url);
+
   const information = {
-    title: "New Conversation",
-    description: "This is a new conversation.",
-    participants: [testUserID], // TODO - update this later
+    user_id: userInfo.id,
+    data: {
+      description: "This is a new conversation.",
+      participants: [userInfo.id], // TODO - update this later
+    },
   };
 
   return fetch(target_url, {
@@ -110,19 +142,22 @@ function createNewConversation(userInfo: UserInformation) {
   })
     .then((response) => {
       console.log("Response status:", response);
-
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       return response.json();
     })
     .then((data) => {
-      // Update sidebar
+      // Update sidebar -- no need to query - just add a new item to sidebar
       console.log("New conversation created:", data);
-      return updateSidebar().then((updatedData) => {
-        console.log("Updated conversations:", updatedData);
-        return updatedData;
-      });
+
+      const conversationItem: ConversationItemProps = {
+        id: data._id.$oid,
+        name: data.title,
+        description: data.description,
+        updated_at: new Date(data.updated_at.$date).toLocaleString(),
+      };
+      return conversationItem;
     })
     .catch((error) => {
       console.error("Error creating new conversation:", error);
@@ -134,7 +169,7 @@ function createNewConversation(userInfo: UserInformation) {
 // Conversation Sidebar
 // ---------------------------------------------------------------- //
 
-function SideBarItem({ id, name, description, updated_at, onClick }: ConversationItemProps) {
+function SideBarItem({ name, updated_at }: ConversationItemProps) {
   const date = new Date(updated_at);
   const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -148,7 +183,13 @@ function SideBarItem({ id, name, description, updated_at, onClick }: Conversatio
     date.getFullYear() === currentDate.getFullYear();
 
   return (
-    <div className={styles["sidebar-list-item"]} onClick={onClick}>
+    <div
+      className={styles["sidebar-list-item"]}
+      onClick={() => {
+        console.log("Clicked on:", name);
+        console.log("CHANGE THIS PLEASE");
+      }}
+    >
       <h3>{name}</h3>
       <small>Updated at: {isSameDay ? time : date.toDateString()}</small>
     </div>
@@ -166,31 +207,31 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
   const [dbConversations, setDBConversations] = React.useState<ConversationItemProps[]>([]);
 
   // ------------------------------------------------- //
+  // functions
+  // ------------------------------------------------- //
+
+  function toggleSidebar() {
+    setShowSidebar(!showSidebar);
+  }
+
+  // ------------------------------------------------- //
   // on load events
   // ------------------------------------------------- //
 
   useEffect(() => {
-    updateSidebar()
+    if (!userInfo || !userInfo.id) {
+      console.error("[EXPECTED] User information is not available");
+      return;
+    }
+
+    // update sidebar conversations
+    retrieveConversations(userInfo)
       .then((data) => {
-        data = data.objects;
         console.log("Conversations data:", data);
         if (data && data.length > 0) {
-          const conversation_array = data.map(
-            (item: {
-              _id: { $oid: string };
-              title: string;
-              description: string;
-              updated_at: { $date: string };
-            }) => ({
-              id: item._id.$oid,
-              name: item.title,
-              description: item.description,
-              updated_at: new Date(item.updated_at.$date).toLocaleString(),
-            })
-          );
-          setDBConversations(conversation_array);
+          setDBConversations(data);
 
-          console.log("Conversations:", conversation_array);
+          console.log("Conversations:", data);
         } else {
           console.log("No conversations found");
         }
@@ -198,15 +239,7 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
       .catch((error) => {
         console.error("Error fetching conversations:", error);
       });
-  }, []); // empty dependency array to run only once on mount
-
-  // ------------------------------------------------- //
-  // functions
-  // ------------------------------------------------- //
-
-  function toggleSidebar() {
-    setShowSidebar(!showSidebar);
-  }
+  }, [userInfo]); // runs on user info change
 
   // --------------------------------------------------------------- //
   // Return Object
@@ -225,20 +258,12 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
         {/* MOVE THIS INTO AS SEPARATE FUNCATION */}
         <button
           onClick={() => {
-            updateSidebar()
+            retrieveConversations(userInfo)
               .then((data) => {
-                data = data.objects;
                 console.log("Conversations data:", data);
                 if (data && data.length > 0) {
-                  const conversation_array = data.map((item: ConversationFetchItem) => ({
-                    id: item._id,
-                    name: item.title,
-                    description: item.description,
-                    updated_at: new Date(item.updated_at.$date).toLocaleString(),
-                  }));
-                  setDBConversations(conversation_array);
-
-                  console.log("Conversations:", conversation_array);
+                  setDBConversations(data);
+                  console.log("Conversations updated:", data);
                 } else {
                   console.log("No conversations found");
                 }
@@ -253,11 +278,37 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
 
         <Icon
           svg={<NewChatIcon />}
-          clickFunction={createNewConversation.bind(null, userInfo)}
+          clickFunction={() => {
+            createNewConversation(userInfo).then((result) => {
+              if (!result) {
+                console.error("Failed to create new conversation");
+                return;
+              }
+
+              // Add the new conversation to the sidebar
+              const newArray = [...dbConversations, result];
+              setDBConversations(newArray);
+            });
+          }}
           css={styles["sidebar-icon-button"]}
         />
       </div>
-      <div>{userInfo.id == null ? <p>User not logged in</p> : <p>User ID: {userInfo.id}</p>}</div>
+
+      {/* debug _- show testing user id */}
+      <div
+        style={{
+          padding: "12px 16px",
+          border: "1px solid #eee",
+          borderRadius: "5px",
+          textWrap: "nowrap",
+          overflow: "hidden",
+          overflowX: "auto",
+        }}
+      >
+        {userInfo.id == null ? <p>User not logged in</p> : <p>User ID: {userInfo.id}</p>}
+      </div>
+
+      {/* Sidebar list */}
       <div className={styles["sidebar-list"]}>
         {dbConversations.map((conversation, i) => (
           <SideBarItem
@@ -275,6 +326,6 @@ function ConversationSidebar({ onConversationClick, userInfo }: ConversationSide
 }
 
 export default ConversationSidebar;
-export { updateSidebar, SideBarItem };
+export { retrieveConversations, SideBarItem };
 export type { ConversationItemProps };
 export type { ConversationFetchItem };

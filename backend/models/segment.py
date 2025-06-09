@@ -3,6 +3,10 @@ from mongoengine import (
     Document,
     StringField,
     IntField,
+    DateTimeField,
+    ReferenceField,
+    ListField,
+    BinaryField,
 )
 
 
@@ -23,3 +27,6 @@ class Segment(Document):
 
     created_at = StringField(default=datetime.utcnow)
     updated_at = StringField(default=datetime.utcnow)
+
+    user = ReferenceField("User", required=True)
+    recording = ReferenceField("Recording", required=True)

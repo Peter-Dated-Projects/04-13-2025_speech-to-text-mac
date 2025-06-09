@@ -73,7 +73,7 @@ fi
 export $(grep -v '^#' ../.env | xargs)
 
 # ---------------------------------------------------- #
-# create database
+# create mongo database
 # ---------------------------------------------------- #
 
 MONGODB_IMAGE="mongodb/mongodb-community-server"
@@ -84,8 +84,8 @@ MONGODB_DB_FOLDER="$FILEDIR/data/db"
 
 # check if has mongodb - if no pull
 DOCKER_IMAGES=$(docker images)
+set +x
 docker pull "$MONGODB_IMAGE:$MONGODB_IMAGE_TAG"
-
 # check if has mongodb container - if no create, if yes start
 # also setup default user and password in mongodb container
 DOCKER_CONTAINERS=$(docker container ls -a)

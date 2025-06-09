@@ -43,7 +43,7 @@ def get_db_objects(
         return None
 
     # perform ensured check
-    if not ensured_enpoint(collection_name):
+    if not ensured_endpoint(collection_name):
         print("Created new collection")
 
     collection = client[collection_name]
@@ -56,10 +56,32 @@ def get_db_objects(
     return json.loads(json_util.dumps(objects))
 
 
-def ensured_enpoint(collection_name: str):
+def get_db_object_count(filter_criteria: dict, collection_name: str) -> int:
+    """
+    Get the count of objects in a collection based on filter criteria.
+
+    Args:
+        filter_criteria (dict): The filter criteria to apply.
+        collection_name (str): The name of the collection to query.
+
+    Returns:
+        int: The count of objects matching the filter criteria.
+    """
+    client = MongoDBInstance.get_database()
+    if client is None:
+        return 0
+
+    collection = client[collection_name]
+    if collection is None:
+        return 0
+
+    return collection.count_documents(filter_criteria)
+
+
+def ensured_endpoint(collection_name: str):
     """
 
-    Makes sure that a database andn colelction exist in the mongodb server
+    Makes sure that a database and collection exist in the mongodb server
     Args:
         database_name (str): name of the database
         collection_name (str): name of the collection
@@ -80,6 +102,45 @@ def ensured_enpoint(collection_name: str):
         return False
 
     return True
+
+
+def create_collection_if_not_exists(collection_name: str) -> Union[bool, str]:
+    """
+    Create a collection if it does not exist
+
+    Args:
+        collection_name (str): name of the collection to create
+
+    Returns:
+        bool: True if the collection was created, False if it already exists
+        str: error message if the collection could not be created
+    """
+    client = MongoDBInstance.get_database()
+    if client is None:
+        return "No mongodb client found"
+
+    if collection_name not in client.list_collection_names():
+        try:
+            client.create_collection(collection_name)
+            return True
+        except NotUniqueError as e:
+            return f"Collection {collection_name} already exists: {e}"
+
+    return False
+
+
+def create_user_session_info_name(user_id: str, session_id: str) -> str:
+    """
+    Create a user-specific session info collection name based on the user ID and session ID.
+
+    Args:
+        user_id (str): The ID of the user.
+        session_id (str): The ID of the session.
+
+    Returns:
+        str: The name of the user-specific session info collection.
+    """
+    return f"user_{user_id}_session_{session_id}_info"
 
 
 # --------------------------------------------------------------------------- #
@@ -286,12 +347,86 @@ def get_objects():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# --------------------------------------------------------------------------- #
+# specific functions
+# --------------------------------------------------------------------------- #
+
+
+@storage_bp.route("/get_conversations", methods=["GET"])
+def get_conversations():
+    """
+    Get all conversations from the database for a specific user
+
+    Returns:
+        JSON: List of conversations
+
+    Args:
+    - user_id (str): ID of the user to get conversations for
+    """
+
+    # get user id
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return (
+            jsonify({"status": "error", "message": "No user ID provided"}),
+            400,
+        )
+
+    # get the mongodb client
+    client = MongoDBInstance.get_database()
+    if client is None:
+        return jsonify({"status": "error", "message": "No mongodb client found"}), 500
+
+    # get the user object
+    _user_object = user.User.objects(id=ObjectId(user_id)).first()
+    if _user_object is None:
+        return (
+            jsonify({"status": "error", "message": "User not found"}),
+            404,
+        )
+
+    # grab all conversations that user is registered in
+    _targets = _user_object.conversations
+    if _targets is None:
+        return (
+            jsonify({"status": "error", "message": "No conversations found for user"}),
+            404,
+        )
+
+    print(f"User {_user_object.email} has {len(_targets)} conversations")
+    print(_targets)
+
+    # retrieve conversation objects from the database
+    _results = []
+    for _target in _targets:
+        # get the conversation object
+        _conversation_object = conversation.Conversation.objects(
+            id=ObjectId(_target.id)
+        ).first()
+        if _conversation_object is None:
+            print(f"Conversation {str(_target.id)} not found")
+            continue
+
+        # convert to JSON-serializable format
+        _string = json.loads(json_util.dumps(_conversation_object.to_mongo()))
+        _results.append(_string)
+    if _results is None:
+        return (
+            jsonify({"status": "error", "message": "No conversations found"}),
+            404,
+        )
+
+    # return conversations
+    return jsonify({"status": "ok", "conversations": _results}), 200
+
+
 @storage_bp.route("/create_conversation", methods=["POST"])
 def create_conversation():
     """
     Create a new conversation in the database
 
     {
+        "user_id": {user id of the user creating the conversation},
         "data": {
             "title": {name of the conversation},
             "description": {description of the conversation},
@@ -313,36 +448,53 @@ def create_conversation():
     if not data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
 
+    user_id = data.get("user_id")
+    conversation_data = data.get("data")
+    if not user_id:
+        return (
+            jsonify({"status": "error", "message": "No user ID provided"}),
+            400,
+        )
+    if not conversation_data:
+        return (
+            jsonify({"status": "error", "message": "No conversation data provided"}),
+            400,
+        )
+
     # get the mongodb client
     client = MongoDBInstance.get_database()
     if client is None:
         return jsonify({"status": "error", "message": "No mongodb client found"}), 500
 
-    # create collection if it doesn't exist
-    collection_name = "conversations"
-    if collection_name not in client.list_collection_names():
-        client.create_collection(collection_name)
+    # grab user object
+    _user_object = user.User.objects(id=ObjectId(user_id)).first()
+    if _user_object is None:
+        return (
+            jsonify({"status": "error", "message": "User not found"}),
+            404,
+        )
+
+    existing_conversations = len(_user_object.conversations)
+    print(f"Existing conversations for user {user_id}: {existing_conversations}")
 
     # create a model instance of the conversation object
     _conversation_target = conversation.Conversation(
-        title=data.get("title"),
-        description=data.get("description"),
-        audio_data=Binary(data.get("audio_data", b"")),
-        audio_duration=data.get("audio_duration", 0.0),
-        compressed=data.get("compressed", False),
-        segment_ids=data.get("segment_ids", []),
-        created_at=data.get("created_at"),
-        updated_at=data.get("updated_at"),
-        participants=data.get("participants", []),
+        title=conversation_data.get(
+            "title", f"New Conversation {existing_conversations + 1}"
+        ),
+        description=conversation_data.get("description"),
+        audio_data=Binary(conversation_data.get("audio_data", b"")),
+        audio_duration=conversation_data.get("audio_duration", 0.0),
+        compressed=conversation_data.get("compressed", False),
+        segment_ids=conversation_data.get("segment_ids", []),
+        created_at=conversation_data.get("created_at"),
+        updated_at=conversation_data.get("updated_at"),
+        participants=conversation_data.get("participants", []),
     )
 
     # Convert conversation object to string representation with all stored data
     print(f"Conversation data: {json_util.dumps(_conversation_target.to_mongo())}")
 
-    # return fail for now
-    # return jsonify({"status": "error", "message": "Not implemented"}), 501
-
-    # add an object into the conversation data
     result = _conversation_target.save()
     if not result:
         return (
@@ -350,7 +502,34 @@ def create_conversation():
             500,
         )
 
-    return jsonify({"status": "ok", "id": str(result)}), 200
+    # update user information
+    _user_object.conversations.append(_conversation_target)
+    _user_object.updated_at = conversation_data.get("updated_at")
+    _user_object.save()
+    if not _user_object:
+        return (
+            jsonify({"status": "error", "message": "Failed to update user"}),
+            500,
+        )
+
+    return (
+        jsonify(
+            {
+                "status": "ok",
+                "_id": {"$oid": str(result.id)},
+                "title": result.title,
+                "description": result.description,
+                "updated_at": {"$date": str(result.updated_at)},
+            }
+        ),
+        200,
+    )
+
+
+@storage_bp.route("/get_conversation_messages", methods=["GET"])
+def get_conversation_messages():
+    print(request.args)
+    pass
 
 
 @storage_bp.route("/create_user", methods=["POST"])

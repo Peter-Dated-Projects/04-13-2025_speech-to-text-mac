@@ -20,6 +20,13 @@ function Conversation({ currentContext, userInfo }: ConversationContainerProps) 
   // functions
   function fetchMessages() {
     // function fetches messages from server
+
+    const target_url = `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/storage/get_messages`;
+    const requestType = "GET";
+    const requestArgs = {
+      user_id: userInfo.id,
+      context: currentContext,
+    };
   }
 
   // effects
